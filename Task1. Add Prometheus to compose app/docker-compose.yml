@@ -1,0 +1,82 @@
+# version: "3.8"
+
+###########################
+# Multi‑Service Demo Stack (no Prometheus yet!)
+# ------------------------------------------------
+#  Services:
+#  ├─ api      – FastAPI application (exposes HTTP API)
+#  ├─ worker   – Celery task runner consuming from Redis queue
+#  ├─ nginx    – Reverse proxy / load‑balancer for api
+#  ├─ db       – PostgreSQL database for api & worker
+#
+#  Networks & volumes are declared at the bottom.
+#  Your task: add Prometheus (+ optional Grafana) service(s) and
+#  instrument api & worker so Prometheus can scrape metrics.
+###########################
+
+services:
+  api:
+    build: ./api  # Dockerfile provided in ./api
+    container_name: api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"   # mapped for local testing via http://localhost:8000
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/app
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    # TODO 1: expose a /metrics endpoint using prometheus‑fastapi‑instrumentator
+    # TODO 2: ensure K8s readiness/liveness probes (if you later migrate)
+
+  worker:
+    build: ./worker  # Dockerfile provided in ./worker
+    container_name: worker
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/app
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    # TODO 3: expose metrics on port 9100 using prometheus_client for Python
+    #         or push metrics to a Pushgateway — your design choice!
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"        # entrypoint to the stack
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+
+  db:
+    image: postgres:16-alpine
+    container_name: db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=app
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+###########################
+# Volumes & Networks
+###########################
+volumes:
+  db-data:
+
+# By default docker‑compose creates a dedicated bridge network
+# named <folder>_default. You can explicitly declare a custom
+# network section if you want greater control.
