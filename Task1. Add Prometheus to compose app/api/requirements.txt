@@ -1,0 +1,5 @@
+fastapi==0.111.0
+uvicorn==0.29.0
+asyncpg==0.29.0  # For PostgreSQL async support
+redis==5.0.1     # For Redis connection
+prometheus-fastapi-instrumentator==6.1.0  # For Prometheus metrics

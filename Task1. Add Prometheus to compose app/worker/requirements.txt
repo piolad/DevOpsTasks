@@ -1,0 +1,3 @@
+celery[redis]==5.3.4
+psycopg2-binary==2.9.9  # For PostgreSQL access if needed
+prometheus-client==0.17.1  # For future metrics support
