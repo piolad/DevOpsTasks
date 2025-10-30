@@ -16,7 +16,7 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 @app.get("/")
 async def read_root():
-    return {"message": "Hello from FastAPI!"}
+    return {"message": "Hello from FastAPI!!"}
 
 # Optional: async init for PostgreSQL and Redis (not yet connected to endpoints)
 async def connect_db():
